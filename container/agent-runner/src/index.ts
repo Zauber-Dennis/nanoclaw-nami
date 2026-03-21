@@ -411,7 +411,8 @@ async function runQuery(
         'NotebookEdit',
         'mcp__nanoclaw__*',
         'mcp__notion__*',
-        'mcp__gmail__*'
+        'mcp__gmail__*',
+        'mcp__gdrive__*'
       ],
       env: sdkEnv,
       permissionMode: 'bypassPermissions',
@@ -433,6 +434,17 @@ async function runQuery(
             args: [path.join(__dirname, 'node_modules', '@notionhq', 'notion-mcp-server', 'bin', 'cli.mjs')],
             env: {
               NOTION_TOKEN: process.env.NOTION_TOKEN,
+            },
+          },
+        } : {}),
+        ...(fs.existsSync('/home/node/.gdrive-mcp/credentials.json') ? {
+          gdrive: {
+            command: 'node',
+            args: [path.join(__dirname, 'node_modules', '@modelcontextprotocol', 'server-gdrive', 'dist', 'index.js')],
+            env: {
+              GDRIVE_CREDENTIALS_PATH: '/home/node/.gdrive-mcp/credentials.json',
+              GDRIVE_OAUTH_PATH: '/home/node/.gdrive-mcp/gcp-oauth.keys.json',
+              HOME: '/home/node',
             },
           },
         } : {}),

@@ -204,6 +204,16 @@ function buildVolumeMounts(
     readonly: false,
   });
 
+  // Google Drive MCP credentials
+  const gdriveMcpDir = path.join(os.homedir(), '.gdrive-mcp');
+  if (fs.existsSync(gdriveMcpDir)) {
+    mounts.push({
+      hostPath: gdriveMcpDir,
+      containerPath: '/home/node/.gdrive-mcp',
+      readonly: false, // MCP server writes refreshed tokens back
+    });
+  }
+
   // Gmail MCP credentials (read-only — token refresh is handled by the MCP server itself)
   const gmailMcpDir = path.join(os.homedir(), '.gmail-mcp');
   if (fs.existsSync(gmailMcpDir)) {
@@ -302,7 +312,11 @@ export async function runContainerAgent(
   const safeName = group.folder.replace(/[^a-zA-Z0-9-]/g, '-');
   const containerName = `nanoclaw-${safeName}-${Date.now()}`;
   const integrationEnv = readAllEnvFileForContainer();
-  const containerArgs = buildContainerArgs(mounts, containerName, integrationEnv);
+  const containerArgs = buildContainerArgs(
+    mounts,
+    containerName,
+    integrationEnv,
+  );
 
   logger.debug(
     {
