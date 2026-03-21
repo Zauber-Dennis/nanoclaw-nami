@@ -2,6 +2,49 @@ import fs from 'fs';
 import path from 'path';
 import { logger } from './logger.js';
 
+// Keys that must never be forwarded to containers — the credential proxy
+// handles Anthropic auth, and containers get their own placeholder values.
+const BLOCKED_CONTAINER_KEYS = new Set([
+  'ANTHROPIC_API_KEY',
+  'ANTHROPIC_BASE_URL',
+  'ANTHROPIC_AUTH_TOKEN',
+  'CLAUDE_CODE_OAUTH_TOKEN',
+]);
+
+/**
+ * Parse the .env file and return ALL key=value pairs except Anthropic
+ * credentials. Used to forward integration tokens (Slack, Notion, etc.)
+ * into agent containers so they can call external APIs.
+ */
+export function readAllEnvFileForContainer(): Record<string, string> {
+  const envFile = path.join(process.cwd(), '.env');
+  let content: string;
+  try {
+    content = fs.readFileSync(envFile, 'utf-8');
+  } catch {
+    return {};
+  }
+
+  const result: Record<string, string> = {};
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx === -1) continue;
+    const key = trimmed.slice(0, eqIdx).trim();
+    if (BLOCKED_CONTAINER_KEYS.has(key)) continue;
+    let value = trimmed.slice(eqIdx + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (value) result[key] = value;
+  }
+  return result;
+}
+
 /**
  * Parse the .env file and return values for the requested keys.
  * Does NOT load anything into process.env — callers decide what to

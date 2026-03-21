@@ -17,6 +17,7 @@ import {
   IDLE_TIMEOUT,
   TIMEZONE,
 } from './config.js';
+import { readAllEnvFileForContainer } from './env.js';
 import { resolveGroupFolderPath, resolveGroupIpcPath } from './group-folder.js';
 import { logger } from './logger.js';
 import {
@@ -229,6 +230,7 @@ function buildVolumeMounts(
 function buildContainerArgs(
   mounts: VolumeMount[],
   containerName: string,
+  integrationEnv: Record<string, string>,
 ): string[] {
   const args: string[] = ['run', '-i', '--rm', '--name', containerName];
 
@@ -265,6 +267,13 @@ function buildContainerArgs(
     args.push('-e', 'HOME=/home/node');
   }
 
+  // Forward integration tokens (Slack, Notion, etc.) so agents can call
+  // external APIs directly. Anthropic credentials are excluded — those are
+  // handled by the credential proxy and never exposed to containers.
+  for (const [key, value] of Object.entries(integrationEnv)) {
+    args.push('-e', `${key}=${value}`);
+  }
+
   for (const mount of mounts) {
     if (mount.readonly) {
       args.push(...readonlyMountArgs(mount.hostPath, mount.containerPath));
@@ -292,7 +301,8 @@ export async function runContainerAgent(
   const mounts = buildVolumeMounts(group, input.isMain);
   const safeName = group.folder.replace(/[^a-zA-Z0-9-]/g, '-');
   const containerName = `nanoclaw-${safeName}-${Date.now()}`;
-  const containerArgs = buildContainerArgs(mounts, containerName);
+  const integrationEnv = readAllEnvFileForContainer();
+  const containerArgs = buildContainerArgs(mounts, containerName, integrationEnv);
 
   logger.debug(
     {
