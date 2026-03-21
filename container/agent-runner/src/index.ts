@@ -427,12 +427,12 @@ async function runQuery(
             NANOCLAW_IS_MAIN: containerInput.isMain ? '1' : '0',
           },
         },
-        ...(process.env.NOTION_API_KEY ? {
+        ...(process.env.NOTION_TOKEN ? {
           notion: {
             command: 'node',
             args: [path.join(__dirname, 'node_modules', '@notionhq', 'notion-mcp-server', 'bin', 'cli.mjs')],
             env: {
-              NOTION_API_KEY: process.env.NOTION_API_KEY,
+              NOTION_TOKEN: process.env.NOTION_TOKEN,
             },
           },
         } : {}),
