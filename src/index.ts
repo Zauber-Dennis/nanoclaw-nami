@@ -38,6 +38,7 @@ import {
   setRegisteredGroup,
   setRouterState,
   setSession,
+  deleteSession,
   storeChatMetadata,
   storeMessage,
 } from './db.js';
@@ -340,6 +341,13 @@ async function runAgent(
 
     return 'success';
   } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    // Stale session: clear it so the next retry starts fresh
+    if (errMsg.includes('No conversation found with session ID')) {
+      logger.warn({ group: group.name }, 'Stale session detected, clearing');
+      delete sessions[group.folder];
+      deleteSession(group.folder);
+    }
     logger.error({ group: group.name, err }, 'Agent error');
     return 'error';
   }

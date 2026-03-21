@@ -145,7 +145,37 @@ Key files:
 - `src/container-runner.ts` - Spawns streaming agent containers
 - `src/task-scheduler.ts` - Runs scheduled tasks
 - `src/db.ts` - SQLite operations (messages, groups, sessions, state)
-- `groups/*/CLAUDE.md` - Per-group memory
+- `groups/*/CLAUDE.md` - Per-group memory (optional, see below)
+
+## Agent Persona & Global Context
+
+Every agent container gets a shared context file injected as a system prompt. This is the right place to put your name, personality, communication preferences, and any domain knowledge you want the agent to always have.
+
+The file is loaded from `/root/nanoclaw/CLAUDE.md` on the host and mounted read-only into every container at `/workspace/global/CLAUDE.md`. It applies to all groups — WhatsApp, Slack, and any future channels.
+
+**Why `/root/nanoclaw/` and not `groups/global/`?**
+
+Storing it outside the repo means it is never accidentally committed or pushed to GitHub. Your personal context (name, company details, communication style, tool credentials) stays private on the server, regardless of whether your repo is public or private.
+
+**Setup:**
+
+```bash
+mkdir -p /root/nanoclaw
+# Create or edit your context file
+nano /root/nanoclaw/CLAUDE.md
+```
+
+Changes take effect immediately — no restart needed. Each container reads the file fresh at spawn time.
+
+**Per-group overrides:**
+
+If you want a group to have additional context on top of the global file (e.g. a different tone for a work group vs. a personal group), create a `CLAUDE.md` in that group's folder:
+
+```
+groups/whatsapp_my-group/CLAUDE.md   # loaded automatically by the SDK
+```
+
+The global file is always injected; the per-group file adds on top of it.
 
 ## FAQ
 
