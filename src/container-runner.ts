@@ -167,7 +167,11 @@ function buildVolumeMounts(
   const groupIpcDir = resolveGroupIpcPath(group.folder);
   fs.mkdirSync(path.join(groupIpcDir, 'messages'), { recursive: true });
   fs.mkdirSync(path.join(groupIpcDir, 'tasks'), { recursive: true });
-  fs.mkdirSync(path.join(groupIpcDir, 'input'), { recursive: true });
+  const ipcInputDir = path.join(groupIpcDir, 'input');
+  fs.mkdirSync(ipcInputDir, { recursive: true });
+  // World-writable so the container process can create and delete IPC files
+  // regardless of which user it runs as inside the container
+  fs.chmodSync(ipcInputDir, 0o777);
   mounts.push({
     hostPath: groupIpcDir,
     containerPath: '/workspace/ipc',
