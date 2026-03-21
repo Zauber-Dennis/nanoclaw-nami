@@ -4,6 +4,7 @@
  */
 import { ChildProcess, exec, spawn } from 'child_process';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 
 import {
@@ -201,6 +202,16 @@ function buildVolumeMounts(
     containerPath: '/app/src',
     readonly: false,
   });
+
+  // Gmail MCP credentials (read-only — token refresh is handled by the MCP server itself)
+  const gmailMcpDir = path.join(os.homedir(), '.gmail-mcp');
+  if (fs.existsSync(gmailMcpDir)) {
+    mounts.push({
+      hostPath: gmailMcpDir,
+      containerPath: '/home/node/.gmail-mcp',
+      readonly: false, // MCP server writes refreshed tokens back
+    });
+  }
 
   // Additional mounts validated against external allowlist (tamper-proof from containers)
   if (group.containerConfig?.additionalMounts) {

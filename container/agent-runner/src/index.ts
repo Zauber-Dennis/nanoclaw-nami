@@ -408,7 +408,8 @@ async function runQuery(
         'TodoWrite', 'ToolSearch', 'Skill',
         'NotebookEdit',
         'mcp__nanoclaw__*',
-        'mcp__notion__*'
+        'mcp__notion__*',
+        'mcp__gmail__*'
       ],
       env: sdkEnv,
       permissionMode: 'bypassPermissions',
@@ -430,6 +431,15 @@ async function runQuery(
             args: [path.join(__dirname, '..', 'node_modules', '@notionhq', 'notion-mcp-server', 'bin', 'cli.mjs')],
             env: {
               NOTION_API_KEY: process.env.NOTION_API_KEY,
+            },
+          },
+        } : {}),
+        ...(fs.existsSync('/home/node/.gmail-mcp/credentials.json') ? {
+          gmail: {
+            command: 'node',
+            args: [path.join(__dirname, '..', 'node_modules', '@gongrzhe', 'server-gmail-autoauth-mcp', 'dist', 'index.js')],
+            env: {
+              HOME: '/home/node',
             },
           },
         } : {}),
