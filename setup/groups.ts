@@ -111,7 +111,7 @@ async function syncGroups(projectRoot: string): Promise<void> {
   let syncOk = false;
   try {
     const syncScript = `
-import makeWASocket, { useMultiFileAuthState, makeCacheableSignalKeyStore, Browsers } from '@whiskeysockets/baileys';
+import makeWASocket, { useMultiFileAuthState, makeCacheableSignalKeyStore, Browsers, fetchLatestWaWebVersion } from '@whiskeysockets/baileys';
 import pino from 'pino';
 import path from 'path';
 import fs from 'fs';
@@ -135,8 +135,10 @@ const upsert = db.prepare(
 );
 
 const { state, saveCreds } = await useMultiFileAuthState(authDir);
+const { version } = await fetchLatestWaWebVersion();
 
 const sock = makeWASocket({
+  version,
   auth: { creds: state.creds, keys: makeCacheableSignalKeyStore(state.keys, logger) },
   printQRInTerminal: false,
   logger,
@@ -150,6 +152,7 @@ const timeout = setTimeout(() => {
 
 sock.ev.on('creds.update', saveCreds);
 
+let synced = false;
 sock.ev.on('connection.update', async (update) => {
   if (update.connection === 'open') {
     try {
@@ -162,6 +165,7 @@ sock.ev.on('connection.update', async (update) => {
           count++;
         }
       }
+      synced = true;
       console.log('SYNCED:' + count);
     } catch (err) {
       console.error('FETCH_ERROR:' + err.message);
@@ -173,8 +177,10 @@ sock.ev.on('connection.update', async (update) => {
     }
   } else if (update.connection === 'close') {
     clearTimeout(timeout);
-    console.error('CONNECTION_CLOSED');
-    process.exit(1);
+    if (!synced) {
+      console.error('CONNECTION_CLOSED');
+      process.exit(1);
+    }
   }
 });
 `;
