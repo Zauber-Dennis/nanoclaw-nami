@@ -416,7 +416,8 @@ async function runQuery(
         'mcp__gsheets__*',
         'mcp__gcalendar__*',
         'mcp__asana__*',
-        'mcp__slack__*'
+        'mcp__slack__*',
+        'mcp__ashby__*'
       ],
       env: sdkEnv,
       permissionMode: 'bypassPermissions',
@@ -487,6 +488,15 @@ async function runQuery(
             args: [path.join(__dirname, 'node_modules', '@roychri', 'mcp-server-asana', 'dist', 'index.js')],
             env: {
               ASANA_ACCESS_TOKEN: process.env.ASANA_ACCESS_TOKEN,
+            },
+          },
+        } : {}),
+        ...(process.env.ASHBY_API_KEY ? {
+          ashby: {
+            command: 'node',
+            args: [path.join(__dirname, 'node_modules', 'ashby-mcp', 'dist', 'index.js')],
+            env: {
+              ASHBY_API_KEY: process.env.ASHBY_API_KEY,
             },
           },
         } : {}),

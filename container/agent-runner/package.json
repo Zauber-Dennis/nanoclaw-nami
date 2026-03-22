@@ -16,6 +16,7 @@
     "@notionhq/notion-mcp-server": "latest",
     "@roychri/mcp-server-asana": "latest",
     "@modelcontextprotocol/server-slack": "latest",
+    "ashby-mcp": "latest",
     "cron-parser": "^5.0.0",
     "zod": "^4.0.0"
   },
