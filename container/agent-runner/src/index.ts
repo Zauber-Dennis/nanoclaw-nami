@@ -412,7 +412,11 @@ async function runQuery(
         'mcp__nanoclaw__*',
         'mcp__notion__*',
         'mcp__gmail__*',
-        'mcp__gdrive__*'
+        'mcp__gdrive__*',
+        'mcp__gsheets__*',
+        'mcp__gcalendar__*',
+        'mcp__asana__*',
+        'mcp__slack__*'
       ],
       env: sdkEnv,
       permissionMode: 'bypassPermissions',
@@ -454,6 +458,45 @@ async function runQuery(
             args: [path.join(__dirname, 'node_modules', '@gongrzhe', 'server-gmail-autoauth-mcp', 'dist', 'index.js')],
             env: {
               HOME: '/home/node',
+            },
+          },
+        } : {}),
+        ...(fs.existsSync('/home/node/.gdrive-mcp/gsheets-credentials.json') ? {
+          gsheets: {
+            command: 'node',
+            args: ['/workspace/extra/host/root/gsheets-mcp/index.js'],
+            env: {
+              GDRIVE_OAUTH_PATH: '/home/node/.gdrive-mcp/gcp-oauth.keys.json',
+              GSHEETS_CREDENTIALS_PATH: '/home/node/.gdrive-mcp/gsheets-credentials.json',
+            },
+          },
+        } : {}),
+        ...(fs.existsSync('/home/node/.gdrive-mcp/gcalendar-credentials.json') ? {
+          gcalendar: {
+            command: 'node',
+            args: ['/workspace/extra/host/root/gcalendar-mcp/index.js'],
+            env: {
+              GDRIVE_OAUTH_PATH: '/home/node/.gdrive-mcp/gcp-oauth.keys.json',
+              GCALENDAR_CREDENTIALS_PATH: '/home/node/.gdrive-mcp/gcalendar-credentials.json',
+            },
+          },
+        } : {}),
+        ...(process.env.ASANA_ACCESS_TOKEN ? {
+          asana: {
+            command: 'node',
+            args: [path.join(__dirname, 'node_modules', '@roychri', 'mcp-server-asana', 'dist', 'index.js')],
+            env: {
+              ASANA_ACCESS_TOKEN: process.env.ASANA_ACCESS_TOKEN,
+            },
+          },
+        } : {}),
+        ...(process.env.SLACK_BOT_TOKEN && process.env.SLACK_TEAM_ID ? {
+          slack: {
+            command: 'node',
+            args: [path.join(__dirname, 'node_modules', '@modelcontextprotocol', 'server-slack', 'dist', 'index.js')],
+            env: {
+              SLACK_BOT_TOKEN: process.env.SLACK_BOT_TOKEN,
+              SLACK_TEAM_ID: process.env.SLACK_TEAM_ID,
             },
           },
         } : {}),
